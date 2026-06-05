@@ -1,0 +1,16 @@
+job_id,product,operation_type,processing_time,arrival_time,due_date,priority_weight,pw_ratio
+J01,Sensor Housing,Milling,18,0,110,2,9.0
+J02,Brake Component,Drilling,42,0,90,5,8.4
+J03,Engine Bracket,Grinding,25,5,160,3,8.33
+J04,Battery Module Cover,Assembly,60,10,150,4,15.0
+J05,Drive Shaft,Lathe,35,0,120,2,17.5
+J06,EV Battery Case,Additive,85,15,260,5,17.0
+J07,Gear Plate,Milling,22,8,100,1,22.0
+J08,Control Box,Assembly,55,20,180,4,13.75
+J09,Cooling Fan Hub,Drilling,12,3,70,3,4.0
+J10,Precision Shaft,Lathe,48,12,140,5,9.6
+J11,EV Cooling Pipe,Additive,30,0,130,4,7.5
+J12,Suspension Arm,Grinding,70,25,240,2,35.0
+J13,Fuel Injector,Drilling,15,7,85,3,5.0
+J14,Thermal Pad,Additive,40,18,170,5,8.0
+J15,ABS Module,Assembly,50,2,200,4,12.5
