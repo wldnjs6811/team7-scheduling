@@ -1,33 +1,30 @@
 """
-Small dataset for Team 7 single-machine scheduling project.
+Team 7 - Small Dataset
+Project: Single Machine Scheduling Algorithm Comparison
+Context: Automotive Parts Manufacturing
 
-Source:
-- Team7_revised_single_machine_scheduling.xlsx
-- Sheet: 02_Revised_Small_Dataset
-
-Project:
-Single Machine Scheduling Algorithm Comparison for Minimizing
-Total Completion Time in Automotive Parts Manufacturing
-
-Objective:
-Minimize Total Completion Time, ΣCj
-
-Columns:
-job_id, product, operation_type, processing_time, arrival_time,
-due_date, priority_weight, p_over_w_ratio
-
-Notes:
-- processing_time > 0
-- due_date > arrival_time
-- p_over_w_ratio = processing_time / priority_weight
-- This small dataset is designed so that FIFO, SPT, EDD, and WSPT
-  do not all produce the same job sequence.
+This code follows the professor's coding guidance:
+1. Implement with functions
+2. Use dictionary and list data structures
+3. Keep the structure simple and intuitive
+4. Make each step visible
+5. Avoid unnecessary complex classes
 """
 
 from copy import deepcopy
+from pprint import pprint
 
 
-small_jobs = [
+# ------------------------------------------------------------
+# Step 1. Define raw small dataset
+# ------------------------------------------------------------
+# Each job is represented as a dictionary.
+# The whole input dataset is represented as a list of dictionaries.
+#
+# p_over_w_ratio = processing_time / priority_weight
+# This column is used for WSPT / priority-based scheduling.
+
+SMALL_JOB_DATA = [
     {
         "job_id": "J1",
         "product": "Sensor Housing",
@@ -131,28 +128,70 @@ small_jobs = [
 ]
 
 
+# ------------------------------------------------------------
+# Step 2. Check calculated column
+# ------------------------------------------------------------
+def check_p_over_w_ratio(job):
+    """
+    Check whether p_over_w_ratio is correctly calculated.
+
+    Formula:
+        p_over_w_ratio = processing_time / priority_weight
+    """
+    expected_ratio = round(job["processing_time"] / job["priority_weight"], 2)
+    actual_ratio = round(job["p_over_w_ratio"], 2)
+
+    return expected_ratio == actual_ratio
+
+
+# ------------------------------------------------------------
+# Step 3. Create small dataset
+# ------------------------------------------------------------
+def create_small_jobs():
+    """
+    Create the small dataset as a list of dictionaries.
+
+    Returns:
+        small_jobs (list): list of job dictionaries
+    """
+    small_jobs = []
+
+    for job in SMALL_JOB_DATA:
+        small_jobs.append(job.copy())
+
+    return small_jobs
+
+
+# ------------------------------------------------------------
+# Step 4. Get small dataset safely
+# ------------------------------------------------------------
 def get_small_jobs():
     """
-    Return a deep copy of the small job dataset.
+    Return a deep copy of the small dataset.
 
     A deep copy is used so that sorting or modifying jobs in one algorithm
     does not affect the original dataset or other algorithms.
     """
+    small_jobs = create_small_jobs()
+
     return deepcopy(small_jobs)
 
 
+# ------------------------------------------------------------
+# Step 5. Validate small dataset
+# ------------------------------------------------------------
 def validate_small_jobs(jobs=None):
     """
-    Validate the small dataset based on the project constraints.
+    Validate whether the small dataset satisfies project constraints.
 
-    Returns:
-        True if all jobs satisfy the constraints.
-
-    Raises:
-        ValueError if any job violates a constraint.
+    Conditions:
+        processing_time > 0
+        due_date > arrival_time
+        priority_weight > 0
+        p_over_w_ratio = processing_time / priority_weight
     """
     if jobs is None:
-        jobs = small_jobs
+        jobs = create_small_jobs()
 
     for job in jobs:
         job_id = job["job_id"]
@@ -166,10 +205,9 @@ def validate_small_jobs(jobs=None):
         if job["priority_weight"] <= 0:
             raise ValueError(f"{job_id}: priority_weight must be greater than 0.")
 
-        expected_ratio = round(job["processing_time"] / job["priority_weight"], 2)
-        actual_ratio = round(job["p_over_w_ratio"], 2)
-
-        if actual_ratio != expected_ratio:
+        if not check_p_over_w_ratio(job):
+            expected_ratio = round(job["processing_time"] / job["priority_weight"], 2)
+            actual_ratio = round(job["p_over_w_ratio"], 2)
             raise ValueError(
                 f"{job_id}: p_over_w_ratio should be {expected_ratio}, "
                 f"but got {actual_ratio}."
@@ -178,7 +216,34 @@ def validate_small_jobs(jobs=None):
     return True
 
 
+# ------------------------------------------------------------
+# Step 6. Print small dataset
+# ------------------------------------------------------------
+def print_small_jobs(jobs=None):
+    """
+    Print the small dataset while keeping dictionary key order.
+    """
+    if jobs is None:
+        jobs = create_small_jobs()
+
+    pprint(jobs, sort_dicts=False)
+
+
+# ------------------------------------------------------------
+# Step 7. Create default small dataset
+# ------------------------------------------------------------
+small_jobs = create_small_jobs()
+
+
+# ------------------------------------------------------------
+# Step 8. Run validation and print dataset
+# ------------------------------------------------------------
 if __name__ == "__main__":
-    validate_small_jobs()
-    print(f"Small dataset validation passed. Number of jobs: {len(small_jobs)}")
-    print("First job:", small_jobs[0])
+    validate_small_jobs(small_jobs)
+
+    print("Small dataset validation passed.")
+    print(f"Number of jobs: {len(small_jobs)}")
+    print()
+
+    print("Small dataset:")
+    print_small_jobs(small_jobs)
