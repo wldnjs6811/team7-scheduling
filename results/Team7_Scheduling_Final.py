@@ -1,4 +1,3 @@
-
 """
 Team 7 - Final Algorithm Comparison
 Project: Single Machine Scheduling Algorithm Comparison
@@ -15,7 +14,8 @@ TEAM7-SCHEDULING/
 ├── data/
 │   ├── large_dataset.py
 │   └── small_dataset.py
-└── Team7_Scheduling_Final.py
+├── results/
+│   └── Team7_Scheduling_Final.py
 
 This code compares FIFO, SPT, EDD, and WSPT using small and large datasets.
 
@@ -37,8 +37,22 @@ Coding style:
 """
 
 import os
+import sys
 import csv
 import matplotlib.pyplot as plt
+
+# ------------------------------------------------------------
+# Step 0. Set project root path
+# ------------------------------------------------------------
+# This file is placed inside the results folder.
+# Therefore, the parent folder is the project root folder.
+CURRENT_DIR = os.path.dirname(os.path.abspath(__file__))
+PROJECT_ROOT = os.path.dirname(CURRENT_DIR)
+
+# Add project root to Python module search path.
+# This allows imports such as data.small_dataset and algorithms.fifo.
+if PROJECT_ROOT not in sys.path:
+    sys.path.insert(0, PROJECT_ROOT)
 
 from data.small_dataset import get_small_jobs, validate_small_jobs
 from data.large_dataset import generate_large_jobs, validate_large_jobs
@@ -634,7 +648,7 @@ def main():
         8. Save runtime and Total Completion Time graphs
         9. Print conclusion
     """
-    output_dir = "results"
+    output_dir = CURRENT_DIR
     os.makedirs(output_dir, exist_ok=True)
 
     print_project_info()
