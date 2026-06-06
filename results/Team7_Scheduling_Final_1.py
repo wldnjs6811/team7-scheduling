@@ -1,16 +1,22 @@
-
 """
 Team 7 - Final Algorithm Comparison
 Project: Single Machine Scheduling Algorithm Comparison
 Context: Automotive Parts Manufacturing
 
-This code is designed for the final presentation and final report.
+Expected GitHub folder structure:
 
-It compares:
-1. FIFO
-2. SPT
-3. EDD
-4. WSPT
+TEAM7-SCHEDULING/
+├── algorithms/
+│   ├── edd.py
+│   ├── fifo.py
+│   ├── spt.py
+│   └── wspt.py
+├── data/
+│   ├── large_dataset.py
+│   └── small_dataset.py
+└── Team7_Scheduling_Final.py
+
+This code compares FIFO, SPT, EDD, and WSPT using small and large datasets.
 
 It shows:
 1. Small data results for all algorithms
@@ -20,7 +26,7 @@ It shows:
 5. Big-O notation
 6. Tardiness
 7. Job sequence
-8. Graphs for runtime and Total Completion Time by data size
+8. Runtime and Total Completion Time graphs by data size
 
 Coding style:
 1. Function-based implementation
@@ -31,34 +37,17 @@ Coding style:
 
 import os
 import csv
-from pprint import pprint
-
 import matplotlib.pyplot as plt
 
+from data.small_dataset import get_small_jobs, validate_small_jobs
+from data.large_dataset import generate_large_jobs, validate_large_jobs
 
-# ------------------------------------------------------------
-# Step 1. Import dataset and algorithm modules
-# ------------------------------------------------------------
-# Required files should be in the same folder:
-# - small_dataset_functional_with_ratio.py
-# - large_dataset_generator_functional_최종.py
-# - fifo_final.py
-# - spt_final.py
-# - edd_final.py
-# - wspt_final.py
-
-from small_dataset_functional_with_ratio import get_small_jobs, validate_small_jobs
-from large_dataset_generator_functional_최종 import generate_large_jobs, validate_large_jobs
-
-from fifo_final import run_fifo
-from spt_final import run_spt
-from edd_final import run_edd
-from wspt_final import run_wspt
+from algorithms.fifo import run_fifo
+from algorithms.spt import run_spt
+from algorithms.edd import run_edd
+from algorithms.wspt import run_wspt
 
 
-# ------------------------------------------------------------
-# Step 2. Define project information
-# ------------------------------------------------------------
 PROJECT_INFO = {
     "topic": "Single Machine Scheduling Algorithm Comparison for Minimizing Total Completion Time in Automotive Parts Manufacturing",
     "objective": "Minimize Total Completion Time, ΣCj",
@@ -90,16 +79,13 @@ PROJECT_INFO = {
 def print_project_info():
     """
     Print project information and presentation checklist.
-
-    This helps the team check whether the final comparison code covers
-    the required presentation and final report items.
     """
     print("\n" + "=" * 80)
     print("PROJECT INFORMATION")
     print("=" * 80)
-    print(f"Topic     : {PROJECT_INFO['topic']}")
-    print(f"Objective : {PROJECT_INFO['objective']}")
-    print(f"Algorithms: {', '.join(PROJECT_INFO['algorithms'])}")
+    print(f"Topic      : {PROJECT_INFO['topic']}")
+    print(f"Objective  : {PROJECT_INFO['objective']}")
+    print(f"Algorithms : {', '.join(PROJECT_INFO['algorithms'])}")
     print(f"Main Metric: {PROJECT_INFO['main_metric']}")
 
     print("\nPresentation Required Items:")
@@ -119,18 +105,13 @@ def print_project_info():
 def get_algorithm_runners():
     """
     Return algorithm runner functions as a dictionary.
-
-    Each runner receives a list of job dictionaries and returns:
-        results, metrics, runtime
     """
-    algorithm_runners = {
+    return {
         "FIFO": run_fifo,
         "SPT": run_spt,
         "EDD": run_edd,
         "WSPT": run_wspt,
     }
-
-    return algorithm_runners
 
 
 # ------------------------------------------------------------
@@ -139,16 +120,23 @@ def get_algorithm_runners():
 def get_job_sequence(results):
     """
     Extract the job sequence from scheduling results.
-
-    Parameters:
-        results (list): scheduled result dictionaries
-
-    Returns:
-        sequence (str): job sequence such as J1 -> J2 -> J3
     """
-    sequence = " -> ".join(result["job_id"] for result in results)
+    return " -> ".join(result["job_id"] for result in results)
 
-    return sequence
+
+# ------------------------------------------------------------
+# Function title (KR): 작업 순서 축약 함수
+# ------------------------------------------------------------
+def shorten_sequence(results, max_jobs=20):
+    """
+    Shorten long job sequences for console output.
+    """
+    if len(results) <= max_jobs:
+        return get_job_sequence(results)
+
+    short_sequence = " -> ".join(result["job_id"] for result in results[:max_jobs])
+    short_sequence += " -> ..."
+    return short_sequence
 
 
 # ------------------------------------------------------------
@@ -157,9 +145,6 @@ def get_job_sequence(results):
 def create_summary_row(dataset_name, algorithm_name, metrics, runtime, sequence):
     """
     Create one summary row for comparison tables.
-
-    This row includes the main objective value, runtime, Big-O,
-    tardiness, and job sequence.
     """
     row = {
         "dataset": dataset_name,
@@ -169,6 +154,7 @@ def create_summary_row(dataset_name, algorithm_name, metrics, runtime, sequence)
         "avg_completion_time": metrics["avg_completion_time"],
         "avg_waiting_time": metrics["avg_waiting_time"],
         "total_flow_time": metrics["total_flow_time"],
+        "avg_flow_time": metrics["avg_flow_time"],
         "total_tardiness": metrics["total_tardiness"],
         "tardy_jobs": metrics["tardy_jobs"],
         "makespan": metrics["makespan"],
@@ -191,18 +177,8 @@ def create_summary_row(dataset_name, algorithm_name, metrics, runtime, sequence)
 def compare_algorithms_on_dataset(jobs, dataset_name, show_full_sequence=True):
     """
     Run all algorithms on one dataset and compare the results.
-
-    Parameters:
-        jobs (list): list of job dictionaries
-        dataset_name (str): name of the dataset
-        show_full_sequence (bool): if False, long sequences are shortened
-
-    Returns:
-        summary_rows (list): comparison rows
-        detailed_results (dict): algorithm results and metrics
     """
     algorithm_runners = get_algorithm_runners()
-
     summary_rows = []
     detailed_results = {}
 
@@ -211,37 +187,33 @@ def compare_algorithms_on_dataset(jobs, dataset_name, show_full_sequence=True):
     print("=" * 80)
 
     for algorithm_name, runner in algorithm_runners.items():
-        # Use a copy of each job dictionary so that one algorithm cannot affect another.
         input_jobs = [job.copy() for job in jobs]
-
         results, metrics, runtime = runner(input_jobs)
-        sequence = get_job_sequence(results)
 
-        if not show_full_sequence and len(results) > 20:
-            short_sequence = " -> ".join(result["job_id"] for result in results[:20])
-            short_sequence += " -> ... "
+        full_sequence = get_job_sequence(results)
+        if show_full_sequence:
+            printed_sequence = full_sequence
         else:
-            short_sequence = sequence
+            printed_sequence = shorten_sequence(results, max_jobs=20)
 
         summary_row = create_summary_row(
             dataset_name=dataset_name,
             algorithm_name=algorithm_name,
             metrics=metrics,
             runtime=runtime,
-            sequence=short_sequence,
+            sequence=printed_sequence,
         )
-
         summary_rows.append(summary_row)
 
         detailed_results[algorithm_name] = {
             "results": results,
             "metrics": metrics,
             "runtime": runtime,
-            "sequence": sequence,
+            "sequence": full_sequence,
         }
 
         print(f"\n[{algorithm_name}]")
-        print(f"Job Sequence                  : {short_sequence}")
+        print(f"Job Sequence                  : {printed_sequence}")
         print(f"Total Completion Time, ΣCj    : {metrics['total_Cj']}")
         print(f"Runtime                       : {runtime} ms")
         print(f"Big-O                         : {metrics['big_o']}")
@@ -252,9 +224,7 @@ def compare_algorithms_on_dataset(jobs, dataset_name, show_full_sequence=True):
             print(f"Weighted Completion Time, ΣwCj: {metrics['total_wCj']}")
 
     print("=" * 80 + "\n")
-
     return summary_rows, detailed_results
-
 
 # ------------------------------------------------------------
 # Function title (KR): 요약 표 출력 함수
@@ -262,13 +232,10 @@ def compare_algorithms_on_dataset(jobs, dataset_name, show_full_sequence=True):
 def print_summary_table(summary_rows):
     """
     Print a compact comparison table.
-
-    The table focuses on key presentation metrics:
-        Total Completion Time, runtime, Big-O, tardiness, and makespan.
     """
-    print("\n" + "=" * 110)
+    print("\n" + "=" * 115)
     print("SUMMARY TABLE")
-    print("=" * 110)
+    print("=" * 115)
 
     header = (
         f"{'Dataset':<16}"
@@ -282,7 +249,7 @@ def print_summary_table(summary_rows):
         f"{'Makespan':>12}"
     )
     print(header)
-    print("-" * 110)
+    print("-" * 115)
 
     for row in summary_rows:
         print(
@@ -297,7 +264,7 @@ def print_summary_table(summary_rows):
             f"{row['makespan']:>12}"
         )
 
-    print("=" * 110 + "\n")
+    print("=" * 115 + "\n")
 
 
 # ------------------------------------------------------------
@@ -306,8 +273,6 @@ def print_summary_table(summary_rows):
 def save_summary_to_csv(summary_rows, filepath):
     """
     Save comparison summary rows to a CSV file.
-
-    This file can be used for the final report or presentation table.
     """
     if not summary_rows:
         return
@@ -328,22 +293,14 @@ def save_summary_to_csv(summary_rows, filepath):
 def save_detailed_results_to_csv(detailed_results, dataset_name, output_dir):
     """
     Save detailed scheduling results for each algorithm.
-
-    Each CSV file contains:
-        seq, job_id, start_time, completion_time, waiting_time,
-        flow_time, tardiness, and other job information.
     """
     for algorithm_name, data in detailed_results.items():
         results = data["results"]
-
         if not results:
             continue
 
-        filepath = os.path.join(
-            output_dir,
-            f"{dataset_name.lower().replace(' ', '_')}_{algorithm_name.lower()}_detailed_results.csv",
-        )
-
+        filename = f"{dataset_name.lower().replace(' ', '_')}_{algorithm_name.lower()}_detailed_results.csv"
+        filepath = os.path.join(output_dir, filename)
         fieldnames = list(results[0].keys())
 
         with open(filepath, "w", newline="", encoding="utf-8-sig") as file:
@@ -363,13 +320,6 @@ def run_size_experiment(data_sizes, seed=7):
 
     This is used to show how runtime and Total Completion Time change
     as the number of jobs increases.
-
-    Parameters:
-        data_sizes (list): example [0, 10, 50, 100, 250, 500, 750, 1000]
-        seed (int): fixed random seed for reproducible large datasets
-
-    Returns:
-        experiment_rows (list): result rows for graph and CSV
     """
     algorithm_runners = get_algorithm_runners()
     experiment_rows = []
@@ -382,7 +332,6 @@ def run_size_experiment(data_sizes, seed=7):
         print(f"\nRunning experiment for n = {n}")
 
         if n == 0:
-            # n=0 is included only for graph baseline.
             for algorithm_name in algorithm_runners:
                 experiment_rows.append({
                     "n_jobs": 0,
@@ -400,7 +349,6 @@ def run_size_experiment(data_sizes, seed=7):
 
         for algorithm_name, runner in algorithm_runners.items():
             input_jobs = [job.copy() for job in jobs]
-
             results, metrics, runtime = runner(input_jobs)
 
             experiment_rows.append({
@@ -421,7 +369,6 @@ def run_size_experiment(data_sizes, seed=7):
             )
 
     print("=" * 80 + "\n")
-
     return experiment_rows
 
 
@@ -451,22 +398,13 @@ def save_experiment_to_csv(experiment_rows, filepath):
 def get_series_by_algorithm(experiment_rows, value_key):
     """
     Convert experiment rows into series data for plotting.
-
-    Parameters:
-        experiment_rows (list): rows from run_size_experiment
-        value_key (str): 'runtime_ms' or 'total_completion_time_Sigma_Cj'
-
-    Returns:
-        series (dict): algorithm -> list of (n_jobs, value)
     """
     series = {}
 
     for row in experiment_rows:
         algorithm = row["algorithm"]
-
         if algorithm not in series:
             series[algorithm] = []
-
         series[algorithm].append((row["n_jobs"], row[value_key]))
 
     for algorithm in series:
@@ -481,8 +419,6 @@ def get_series_by_algorithm(experiment_rows, value_key):
 def plot_runtime_graph(experiment_rows, output_path):
     """
     Plot runtime by dataset size for each algorithm.
-
-    The graph is saved as a PNG file.
     """
     series = get_series_by_algorithm(experiment_rows, "runtime_ms")
 
@@ -511,8 +447,6 @@ def plot_runtime_graph(experiment_rows, output_path):
 def plot_total_completion_time_graph(experiment_rows, output_path):
     """
     Plot Total Completion Time, ΣCj by dataset size for each algorithm.
-
-    The graph is saved as a PNG file.
     """
     series = get_series_by_algorithm(experiment_rows, "total_completion_time_Sigma_Cj")
 
@@ -534,16 +468,12 @@ def plot_total_completion_time_graph(experiment_rows, output_path):
 
     print(f"[Saved] {output_path}")
 
-
 # ------------------------------------------------------------
 # Function title (KR): 결론 생성 함수
 # ------------------------------------------------------------
 def print_conclusion(summary_rows):
     """
     Print a simple conclusion based on Total Completion Time, ΣCj.
-
-    Since the main objective is minimizing ΣCj, the algorithm with
-    the smallest total_Cj is selected as the best algorithm for each dataset.
     """
     print("\n" + "=" * 80)
     print("CONCLUSION BASED ON TOTAL COMPLETION TIME, ΣCj")
@@ -563,9 +493,9 @@ def print_conclusion(summary_rows):
 
     print("\nInterpretation:")
     print("- SPT is expected to perform strongly for minimizing Total Completion Time, ΣCj.")
-    print("- FIFO is easy and fair by arrival order, but may perform worse when long jobs arrive early.")
+    print("- FIFO is simple and fair by arrival order, but may perform worse when long jobs arrive early.")
     print("- EDD considers due dates, so it is useful as a due-date-aware comparison rule.")
-    print("- WSPT reflects priority_weight and is useful as an extension when job importance is considered.")
+    print("- WSPT reflects priority_weight and is useful when job importance is considered.")
     print("=" * 80 + "\n")
 
 
@@ -587,20 +517,17 @@ def main():
         8. Save runtime and Total Completion Time graphs
         9. Print conclusion
     """
-    output_dir = "team7_comparison_outputs"
+    output_dir = "results"
     os.makedirs(output_dir, exist_ok=True)
 
     print_project_info()
 
-    # Small dataset
     small_jobs = get_small_jobs()
     validate_small_jobs(small_jobs)
 
-    # Large dataset
     large_jobs = generate_large_jobs(n=1000, seed=7)
     validate_large_jobs(large_jobs)
 
-    # Compare algorithms on small and large datasets
     small_summary, small_details = compare_algorithms_on_dataset(
         jobs=small_jobs,
         dataset_name="Small Data",
@@ -614,10 +541,8 @@ def main():
     )
 
     all_summary_rows = small_summary + large_summary
-
     print_summary_table(all_summary_rows)
 
-    # Save comparison results
     save_summary_to_csv(
         summary_rows=all_summary_rows,
         filepath=os.path.join(output_dir, "summary_comparison.csv"),
@@ -635,8 +560,6 @@ def main():
         output_dir=output_dir,
     )
 
-    # Run data size experiment for graph
-    # 0 is used as a graph baseline.
     data_sizes = [0, 10, 50, 100, 250, 500, 750, 1000]
     experiment_rows = run_size_experiment(data_sizes=data_sizes, seed=7)
 
@@ -645,7 +568,6 @@ def main():
         filepath=os.path.join(output_dir, "data_size_experiment.csv"),
     )
 
-    # Save graphs
     plot_runtime_graph(
         experiment_rows=experiment_rows,
         output_path=os.path.join(output_dir, "runtime_by_data_size.png"),
