@@ -1,0 +1,11 @@
+﻿seq,job_id,product,operation_type,processing_time,arrival_time,due_date,priority_weight,p_over_w_ratio,start_time,completion_time,waiting_time,flow_time,tardiness
+1,J1,Sensor Housing,Milling,18,0,110,2,9.0,0,18,0,18,0
+2,J9,Cooling Fan Hub,Drilling,12,3,70,3,4.0,18,30,15,27,0
+3,J7,Gear Plate,Milling,22,8,100,1,22.0,30,52,22,44,0
+4,J3,Engine Bracket,Grinding,25,5,160,3,8.33,52,77,47,72,0
+5,J5,Drive Shaft,Lathe,35,0,120,2,17.5,77,112,77,112,0
+6,J2,Brake Component,Drilling,42,0,90,5,8.4,112,154,112,154,64
+7,J10,Precision Shaft,Lathe,48,12,140,5,9.6,154,202,142,190,62
+8,J8,Control Box,Assembly,55,20,180,4,13.75,202,257,182,237,77
+9,J4,Battery Module Cover,Assembly,60,10,150,4,15.0,257,317,247,307,167
+10,J6,EV Battery Case,Additive Manufacturing,85,15,260,5,17.0,317,402,302,387,142
