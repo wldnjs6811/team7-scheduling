@@ -14,8 +14,7 @@ TEAM7-SCHEDULING/
 ├── data/
 │   ├── large_dataset.py
 │   └── small_dataset.py
-├── results/
-│   └── Team7_Scheduling_Final.py
+└── Team7_Scheduling_Final.py
 
 This code compares FIFO, SPT, EDD, and WSPT using small and large datasets.
 
@@ -37,22 +36,8 @@ Coding style:
 """
 
 import os
-import sys
 import csv
 import matplotlib.pyplot as plt
-
-# ------------------------------------------------------------
-# Step 0. Set project root path
-# ------------------------------------------------------------
-# This file is placed inside the results folder.
-# Therefore, the parent folder is the project root folder.
-CURRENT_DIR = os.path.dirname(os.path.abspath(__file__))
-PROJECT_ROOT = os.path.dirname(CURRENT_DIR)
-
-# Add project root to Python module search path.
-# This allows imports such as data.small_dataset and algorithms.fifo.
-if PROJECT_ROOT not in sys.path:
-    sys.path.insert(0, PROJECT_ROOT)
 
 from data.small_dataset import get_small_jobs, validate_small_jobs
 from data.large_dataset import generate_large_jobs, validate_large_jobs
@@ -594,6 +579,237 @@ def plot_total_completion_time_graph(experiment_rows, output_path):
 
     print(f"[Saved] {output_path}")
 
+
+# ------------------------------------------------------------
+# Function title (KR): 작업 리스트를 맵으로 변환하는 함수
+# ------------------------------------------------------------
+def create_job_map(jobs):
+    """
+    Convert a list of job dictionaries into a dictionary-based map.
+
+    Key:
+        job_id
+
+    Value:
+        job information dictionary
+
+    This function does not modify the original dataset.
+    """
+    job_map = {}
+
+    for job in jobs:
+        job_map[job["job_id"]] = job.copy()
+
+    return job_map
+
+
+# ------------------------------------------------------------
+# Function title (KR): 작업 ID 기반 검색 함수
+# ------------------------------------------------------------
+def map_search_by_job_id(job_map, job_id):
+    """
+    Search one job by job_id using a dictionary-based map.
+
+    Expected time complexity:
+        O(1) average case using Python dictionary
+        O(n) worst case when hash collisions are severe
+    """
+    return job_map.get(job_id)
+
+
+# ------------------------------------------------------------
+# Function title (KR): 조건 기반 검색 함수
+# ------------------------------------------------------------
+def map_search_high_priority_jobs(job_map, minimum_priority=4):
+    """
+    Search high-priority jobs by scanning all values in the job map.
+
+    Expected time complexity:
+        O(n), because every job must be checked.
+    """
+    found_jobs = []
+
+    for job in job_map.values():
+        if job["priority_weight"] >= minimum_priority:
+            found_jobs.append(job)
+
+    return found_jobs
+
+
+# ------------------------------------------------------------
+# Function title (KR): 맵 삽입 함수
+# ------------------------------------------------------------
+def map_insert_job(job_map, new_job):
+    """
+    Insert a new job into the job map.
+
+    Expected time complexity:
+        O(1) average case using Python dictionary
+        O(n) worst case when hash collisions are severe
+
+    This operation is performed on a copied map, so the main scheduling
+    dataset is not affected.
+    """
+    job_map[new_job["job_id"]] = new_job.copy()
+
+    return job_map
+
+
+# ------------------------------------------------------------
+# Function title (KR): 맵 삭제 함수
+# ------------------------------------------------------------
+def map_delete_job_by_id(job_map, job_id):
+    """
+    Delete one job from the job map by job_id.
+
+    Expected time complexity:
+        O(1) average case using Python dictionary
+        O(n) worst case when hash collisions are severe
+
+    This operation is performed on a copied map, so the main scheduling
+    dataset is not affected.
+    """
+    if job_id in job_map:
+        deleted_job = job_map.pop(job_id)
+        return deleted_job
+
+    return None
+
+
+# ------------------------------------------------------------
+# Function title (KR): 맵 연산 성능 실험 함수
+# ------------------------------------------------------------
+def run_map_operation_experiment(jobs, dataset_name, output_dir):
+    """
+    Run Map operation experiments at the end of the program.
+
+    This experiment is added only as a DSA Map ADT performance section.
+    It does not change the main small dataset, large dataset, scheduling
+    results, summary comparison, or graphs.
+
+    Operations:
+        1. Search by job_id
+        2. Search by condition
+        3. Insertion
+        4. Deletion
+    """
+    # Create an independent map copy so the original dataset is not affected.
+    job_map = create_job_map(jobs)
+
+    # Select one existing job_id for search and deletion demonstration.
+    existing_job_id = jobs[0]["job_id"]
+
+    # Prepare one new job for insertion experiment.
+    new_job = {
+        "job_id": "J_MAP_NEW",
+        "product": "EV Battery Case",
+        "operation_type": "Assembly",
+        "processing_time": 75,
+        "arrival_time": 30,
+        "due_date": 150,
+        "priority_weight": 5,
+        "p_over_w_ratio": round(75 / 5, 2),
+    }
+
+    map_rows = []
+
+    # 1. Search by job_id
+    start_time = time.perf_counter()
+    searched_job = map_search_by_job_id(job_map, existing_job_id)
+    runtime_ms = (time.perf_counter() - start_time) * 1000
+
+    map_rows.append({
+        "Dataset": dataset_name,
+        "Operation": "Search by job_id",
+        "Example": existing_job_id,
+        "Result": "Found" if searched_job is not None else "Not found",
+        "Map Size Before": len(job_map),
+        "Map Size After": len(job_map),
+        "Big-O": "O(1) avg / O(n) worst",
+        "Runtime(ms)": format_number(runtime_ms),
+    })
+
+    # 2. Search by condition
+    start_time = time.perf_counter()
+    high_priority_jobs = map_search_high_priority_jobs(job_map, minimum_priority=4)
+    runtime_ms = (time.perf_counter() - start_time) * 1000
+
+    map_rows.append({
+        "Dataset": dataset_name,
+        "Operation": "Search by condition",
+        "Example": "priority_weight >= 4",
+        "Result": f"{len(high_priority_jobs)} jobs found",
+        "Map Size Before": len(job_map),
+        "Map Size After": len(job_map),
+        "Big-O": "O(n)",
+        "Runtime(ms)": format_number(runtime_ms),
+    })
+
+    # 3. Insertion
+    size_before = len(job_map)
+    start_time = time.perf_counter()
+    map_insert_job(job_map, new_job)
+    runtime_ms = (time.perf_counter() - start_time) * 1000
+
+    map_rows.append({
+        "Dataset": dataset_name,
+        "Operation": "Insertion",
+        "Example": new_job["job_id"],
+        "Result": "Inserted",
+        "Map Size Before": size_before,
+        "Map Size After": len(job_map),
+        "Big-O": "O(1) avg / O(n) worst",
+        "Runtime(ms)": format_number(runtime_ms),
+    })
+
+    # 4. Deletion
+    size_before = len(job_map)
+    start_time = time.perf_counter()
+    deleted_job = map_delete_job_by_id(job_map, new_job["job_id"])
+    runtime_ms = (time.perf_counter() - start_time) * 1000
+
+    map_rows.append({
+        "Dataset": dataset_name,
+        "Operation": "Deletion",
+        "Example": new_job["job_id"],
+        "Result": "Deleted" if deleted_job is not None else "Not found",
+        "Map Size Before": size_before,
+        "Map Size After": len(job_map),
+        "Big-O": "O(1) avg / O(n) worst",
+        "Runtime(ms)": format_number(runtime_ms),
+    })
+
+    print_table(
+        title=f"MAP OPERATION PERFORMANCE TABLE - {dataset_name}",
+        columns=[
+            "Dataset",
+            "Operation",
+            "Example",
+            "Result",
+            "Map Size Before",
+            "Map Size After",
+            "Big-O",
+            "Runtime(ms)",
+        ],
+        rows=map_rows,
+    )
+
+    filepath = os.path.join(
+        output_dir,
+        f"{dataset_name.lower().replace(' ', '_')}_map_operation_results.csv",
+    )
+
+    with open(filepath, "w", newline="", encoding="utf-8-sig") as file:
+        fieldnames = list(map_rows[0].keys())
+        writer = csv.DictWriter(file, fieldnames=fieldnames)
+        writer.writeheader()
+        writer.writerows(map_rows)
+
+    print(f"[Saved] {filepath}")
+
+    return map_rows
+
+
 # ------------------------------------------------------------
 # Function title (KR): 결론 생성 함수
 # ------------------------------------------------------------
@@ -648,7 +864,7 @@ def main():
         8. Save runtime and Total Completion Time graphs
         9. Print conclusion
     """
-    output_dir = CURRENT_DIR
+    output_dir = "results"
     os.makedirs(output_dir, exist_ok=True)
 
     print_project_info()
@@ -710,6 +926,14 @@ def main():
     )
 
     print_conclusion(all_summary_rows)
+
+    # Map operation experiment is added at the end only.
+    # It uses copied job data and does not affect the main scheduling results.
+    run_map_operation_experiment(
+        jobs=large_jobs,
+        dataset_name="Large Data",
+        output_dir=output_dir,
+    )
 
     print("Final comparison completed successfully.")
     print(f"Output folder: {output_dir}")
