@@ -1,5 +1,0 @@
-﻿Dataset,Operation,Example,Result,Map Size Before,Map Size After,Big-O,Runtime(ms)
-Large Data,Search by job_id,J0001,Found,1000,1000,O(1) avg / O(n) worst,0.0021
-Large Data,Search by condition,priority_weight >= 4,616 jobs found,1000,1000,O(n),0.1039
-Large Data,Insertion,J_MAP_NEW,Inserted,1000,1001,O(1) avg / O(n) worst,0.0014
-Large Data,Deletion,J_MAP_NEW,Deleted,1001,1000,O(1) avg / O(n) worst,0.0022
