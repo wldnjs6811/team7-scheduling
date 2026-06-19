@@ -5,7 +5,12 @@ Dispatching Rule : Process jobs in order of earliest arrival_time.
                    Ties broken by job_id.
 Objective        : Comparison based on Total Completion Time  ΣCj
 Data Structure   : Queue  (sorted list, processed front-to-back)
-Time Complexity  : O(n log n)  — one-time sort by arrival_time
+Time Complexity  : O(n) for FIFO queue processing
+                   O(n log n) including one-time sorting by arrival_time
+
+Updated after presentation feedback:
+FIFO itself is O(n), but this implementation first sorts jobs by arrival_time.
+Therefore, the implemented complexity including preprocessing is O(n log n).
 Space Complexity : O(n)
 
 This version is modified to match Team 7 dataset files:
@@ -114,10 +119,10 @@ def compute_metrics(results: list[dict]) -> dict:
         "makespan": max(r["completion_time"] for r in results),
 
       # [UPDATED after presentation feedback]
-# FIFO queue processing itself is O(n) after the queue order is already prepared.
-# In this implementation, the input list is first sorted by arrival_time to build
-# the FIFO queue order. Therefore, the implemented total complexity including
-# this preprocessing step is O(n log n).
+      # FIFO queue processing itself is O(n) after the queue order is already prepared.
+      # In this implementation, the input list is first sorted by arrival_time to build
+      # the FIFO queue order. Therefore, the implemented total complexity including
+      # this preprocessing step is O(n log n).
       
         "big_o": "O(n) processing / O(n log n) incl. sort",
     }
