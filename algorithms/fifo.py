@@ -112,7 +112,14 @@ def compute_metrics(results: list[dict]) -> dict:
         "total_tardiness": sum(r["tardiness"] for r in results),
         "tardy_jobs": sum(1 for r in results if r["tardiness"] > 0),
         "makespan": max(r["completion_time"] for r in results),
-        "big_o": "O(n log n)",
+
+      # [UPDATED after presentation feedback]
+# FIFO queue processing itself is O(n) after the queue order is already prepared.
+# In this implementation, the input list is first sorted by arrival_time to build
+# the FIFO queue order. Therefore, the implemented total complexity including
+# this preprocessing step is O(n log n).
+      
+        "big_o": "O(n) processing / O(n log n) incl. sort",
     }
 
 
